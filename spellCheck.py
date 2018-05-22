@@ -47,11 +47,6 @@ print(time2)
 while True:
     print ""
     name = raw_input("Enter your word: ")
-    print candidates(name)
-    correcetedName = correction(name)
-
-    if correcetedName == name :
-        print "Correct " + correcetedName
-    else :
-        print "Uncorrect, the correct word is " + correcetedName
+    a = candidates(name)
+    print list(a)
 
