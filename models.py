@@ -2,6 +2,8 @@
 This file contains the process where we train our predictive models, Also
 helpful are the load_models and save_models functions.
 """
+# -*- coding: utf-8 -*-
+
 
 import os
 
@@ -12,6 +14,8 @@ import pickle
 import re
 
 from collections import Counter
+
+import time
 
 #the so called "Hidden" step, thus allowing this module to be
 #a "Hidden Markov Model"... Whatever that means...
@@ -42,6 +46,43 @@ NEARBY_KEYS = {
     'y': 'tghu',
     'z': 'asx'
     }
+
+alphabet = [
+'a',
+'b',
+'c',
+'d',
+'dh',
+'e',
+'f',
+'g',
+'gj',
+'h',
+'i',
+'j',
+'k',
+'l',
+'ll',
+'m',
+'n',
+'nj',
+'o',
+'p',
+'q',
+'r',
+'rr',
+'s',
+'sh',
+'t',
+'th',
+'u',
+'v',
+'x',
+'xh',
+'y',
+'z',
+'zh'
+]
 
 
 WORDS = []
@@ -176,50 +217,47 @@ predict_currword = this_word
 def this_word_given_last(first_word, second_word, top_n=10):
     """given a word, return top n suggestions determined by the frequency of
     words prefixed by the input GIVEN the occurence of the last word"""
+    try :
+        # Hidden step
+        possible_second_words =[second_word[:-1]+char
+        for char in NEARBY_KEYS[second_word[-1]]
+        if len(second_word) > 2]
 
-    #Hidden step
-    possible_second_words = [second_word[:-1]+char
-                             for char in NEARBY_KEYS[second_word[-1]]
-                             if len(second_word) > 2]
+        possible_second_words.append(second_word)
 
-    possible_second_words.append(second_word)
+        probable_words = {w:c
+        for w, c in
+        WORD_TUPLES_MODEL[first_word.lower()].items()
+        for sec_word in possible_second_words
+        if w.startswith(sec_word)}
 
-    probable_words = {w:c for w, c in
-                      WORD_TUPLES_MODEL[first_word.lower()].items()
-                      for sec_word in possible_second_words
-                      if w.startswith(sec_word)}
+        return Counter(probable_words).most_common(top_n)
+    except:
+        #print second_word + " -1-> " + second_word[-1]
+        return []
 
-    return Counter(probable_words).most_common(top_n)
-
-
-predict_currword_given_lastword = this_word_given_last
-
-
-def predict(first_word, second_word, top_n=10):
-    """given the last word and the current word to complete, we call
-    predict_currword or predict_currword_given_lastword to retrive most n
-    probable suggestions.
-    """
-
-    try:
-        if first_word and second_word:
-            return predict_currword_given_lastword(first_word,
-                                                   second_word,
-                                                   top_n=top_n)
-        else:
-            return predict_currword(first_word, top_n)
-    except KeyError:
-        raise Exception("Please load predictive models. Run:\
-                        \n\tautocomplete.load()")
+def print_results(results):
+    for result in results[0:10]:
+        print result[0]
 
 
-def split_predict(text, top_n=10):
-    """takes in string and will right split accordingly.
-    Optionally, you can provide keyword argument "top_n" for
-    choosing the number of suggestions to return (default is 10)"""
-    text = helpers.norm_rsplit(text, 2)
-    return predict(*text, top_n=top_n)
+#time1 = time.asctime()
+#print("start loading dataset " + time1)
 
 load_models()
-print WORDS_MODEL.most_common(10)
-print predict("une", "j")
+#this_word_given_last("ti", "j") + this_word_given_last("ti", "a")
+
+#time2 = time.asctime()
+#print("finish loading dataset " + time2)
+
+while True:
+    print ""
+    name = raw_input("Shkruaj fjalen: ")
+    results = []
+    for letter in alphabet:
+        results = results + this_word_given_last(name, letter)
+
+    results = sorted(results, key=lambda res: res[1])[::-1]  # sort by age
+    results = filter(lambda x: not (x[0] in alphabet), results)
+    print_results(results)
+
