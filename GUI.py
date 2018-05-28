@@ -1,4 +1,4 @@
-from Tkinter import *
+from tkinter import *
 
 # First create application class
 """AUTOCOMPLETE -
@@ -241,7 +241,7 @@ def this_word_given_last(first_word, second_word, top_n=10):
 
 def print_results(results):
     for result in results[0:10]:
-        print result[0]
+        print (result[0])
 
 
 #time1 = time.asctime()
@@ -301,12 +301,12 @@ class Application(Frame):
 
         self.lbox.delete(0, END)
 
-        for item in results[0:10]:
+        for item in results:
             self.lbox.insert(END, item[0])
 
 
 root = Tk()
 root.title('Sugjero fjalen')
 app = Application(master=root)
-print 'Starting mainloop()'
+print ('Starting mainloop()')
 app.mainloop()
