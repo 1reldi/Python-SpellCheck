@@ -1,19 +1,16 @@
-from Tkinter import *
+from tkinter import *
 
-# First create application class
-"""AUTOCOMPLETE -
-This file contains the process where we train our predictive models, Also
-helpful are the load_models and save_models functions.
-"""
 # -*- coding: utf-8 -*-
 
 import modelet
 
 import autocomplete
 
-WORDS_MODEL = {}
+import autocorrect
 
-WORD_TUPLES_MODEL = {}
+FJALET_MODELE = {}
+
+FJALET_MODELE_TUPLES = {}
 
 class Application(Frame):
 
@@ -24,10 +21,10 @@ class Application(Frame):
         self.create_widgets()
 
         model = modelet.merr_modelet()
-        global WORDS_MODEL
-        global WORD_TUPLES_MODEL
-        WORDS_MODEL = model[0]
-        WORD_TUPLES_MODEL = model[1]
+        global FJALET_MODELE
+        global FJALET_MODELE_TUPLES
+        FJALET_MODELE = model[0]
+        FJALET_MODELE_TUPLES = model[1]
 
 
 
@@ -45,20 +42,26 @@ class Application(Frame):
 
         # Function for updating the list/doing the search.
         # It needs to be called here to populate the listbox.
-        self.update_list()
 
     def update_list(self, *args):
-        name = self.search_var.get()
-        results = []
-        for letter in autocomplete.alphabet:
-            results = results + autocomplete.sugjero(name, letter, 10, WORD_TUPLES_MODEL)
+        fjala = self.search_var.get()
+        mundesite_e_fjales = autocorrect.kontrolloFjalen(fjala) #Shikojme nese fjala nuk eshte shkruar mire
+        print(mundesite_e_fjales)
+        if len(mundesite_e_fjales) > 1 and mundesite_e_fjales != '': #Vendosim fjalet qe mund te ishin korrekte ne vend te fjales gabim
+            self.lbox.delete(0, END)
+            for item in mundesite_e_fjales[0:5]:
+                self.lbox.insert(END, item)
+            return
 
-        results = sorted(results, key=lambda res: res[1])[::-1]
-        results = filter(lambda x: not (x[0] in autocomplete.alphabet), results)
+        results = autocomplete.sugjero(fjala, FJALET_MODELE_TUPLES) #Marrim rezulatet e mundshme per nje fjale
+
+        results = sorted(results, key=lambda res: res[1])[::-1] #bejm reverse listes sepse rezultatet i kemi nga me i vogli
+        results = filter(lambda x: not (x[0] in autocomplete.alfabeti), results) #Largojm mundesite qe vijne si shkronja alfabeti
+        results = list(results)
 
         self.lbox.delete(0, END)
 
-        for item in results:
+        for item in results[0:10]:
             self.lbox.insert(END, item[0])
 
 

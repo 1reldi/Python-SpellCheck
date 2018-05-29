@@ -1,18 +1,14 @@
+# -*- coding: utf-8 -*-
 import re
-import time
 from collections import Counter
 
 def words(text): return re.findall(r'\w+', text.lower())
 
+FJALET = Counter(words(open('dataSet.txt', encoding = "ISO-8859-1").read()))
 
-time1 = time.asctime()
-print(time1)
-
-WORDS = Counter(words(open('dataSet.txt').read()))#big corpus1 hope
-
-def P(word, N=sum(WORDS.values())): 
+def P(word, N=sum(FJALET.values())):
     "Probability of `word`."
-    return WORDS[word] / N
+    return FJALET[word] / N
 
 def correction(word): 
     "Most probable spelling correction for word."
@@ -25,7 +21,7 @@ def candidates(word):
 
 def known(words): 
     "The subset of `words` that appear in the dictionary of WORDS."
-    return set(w for w in words if w in WORDS)
+    return set(w for w in words if w in FJALET)
 
 def edits1(word):
     "All edits that are one edit away from `word`."
@@ -41,12 +37,7 @@ def edits2(word):
     "All edits that are two edits away from `word`."
     return (e2 for e1 in edits1(word) for e2 in edits1(e1))
 
-time2 = time.asctime()
-print(time2)
-
-while True:
-    print ""
-    name = raw_input("Enter your word: ")
-    a = candidates(name)
-    print (a)
+def kontrolloFjalen(fjala):
+    mundesite = list(candidates(fjala))
+    return mundesite
 
