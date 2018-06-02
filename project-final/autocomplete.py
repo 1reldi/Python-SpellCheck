@@ -2,11 +2,8 @@ import collections
 
 from collections import Counter
 
-#the so called "Hidden" step, thus allowing this module to be
-#a "Hidden Markov Model"... Whatever that means...
 
-
-alphabet = [
+alfabeti = [
 'a',
 'b',
 'c',
@@ -43,53 +40,21 @@ alphabet = [
 'zh'
 ]
 
-
-NEARBY_KEYS = {
-    'a': 'qwsz',
-    'b': 'vghn',
-    'c': 'xdfv',
-    'd': 'erfcxs',
-    'e': 'rdsw',
-    'f': 'rtgvcd',
-    'g': 'tyhbvf',
-    'h': 'yujnbg',
-    'j': 'uikmnh',
-    'k': 'iolmj',
-    'l': 'opk',
-    'm': 'njk',
-    'n': 'bhjm',
-    'o': 'iklp',
-    'p': 'ol',
-    'q': 'wa',
-    'r': 'edft',
-    's': 'wedxza',
-    't': 'rfgy',
-    'u': 'yhji',
-    'v': 'cfgb',
-    'w': 'qase',
-    'x': 'zsdc',
-    'y': 'tghu',
-    'z': 'asx'
-    }
-
-def sugjero(first_word, second_word, top_n, WORD_TUPLES_MODEL):
-    """given a word, return top n suggestions determined by the frequency of
-    words prefixed by the input GIVEN the occurence of the last word"""
+#Kur jepet nje fjale, rikthen mundesit e mundshme duke u bazuar ne shpeshtesine e fjales dhe mbi mundesine e fjales se ardhshme
+def parashiko_fjale(fjala, shkronja, top_n, WORD_TUPLES_MODEL):
     try :
-        # Hidden step
-        possible_second_words =[second_word[:-1]+char
-        for char in NEARBY_KEYS[second_word[-1]]
-        if len(second_word) > 2]
-
-        possible_second_words.append(second_word)
-
-        probable_words = {w:c
+        fjalet_e_mundshme = {w:c
         for w, c in
-        WORD_TUPLES_MODEL[first_word.lower()].items()
-        for sec_word in possible_second_words
-        if w.startswith(sec_word)}
+        WORD_TUPLES_MODEL[fjala.lower()].items() #Vendosim fjalet e mundshme dhe nje numer qe tregon mundesine qe ka ajo fjale te jet fjala pasardhese
+        if w.startswith(shkronja)}
 
-        return Counter(probable_words).most_common(top_n)
+        return Counter(fjalet_e_mundshme).most_common(top_n)
     except:
-        #print second_word + " -1-> " + second_word[-1]
         return []
+
+#Per cdo shkronje te alfabetit ne gjejme mundesite e ndryshme se cila mund te jete fjala tjeter qe nis me ate germe
+def sugjero(fjala, WORD_TUPLES_MODEL):
+    rezultate = []
+    for shkronje in alfabeti:
+        rezultate = rezultate + parashiko_fjale(fjala, shkronje, 10, WORD_TUPLES_MODEL)
+    return rezultate

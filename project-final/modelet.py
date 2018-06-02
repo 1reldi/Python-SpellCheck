@@ -1,5 +1,4 @@
-#This step is where we transform "raw" data
-# into some sort of probabilistic model(s)
+#Ketu ne marrim te dhenat tekst dhe formojme modele statistikore
 import os
 
 import re
@@ -8,60 +7,45 @@ import pickle
 
 import collections
 
-from collections import Counter
+FJALET = []
 
+FJALET_TUPLE = []
 
-WORDS = []
+FJALET_MODELE = {}
 
-WORD_TUPLES = []
+FJALET_MODELE_TUPLES = {}
 
-WORDS_MODEL = {}
-
-WORD_TUPLES_MODEL = {}
-
-#http://norvig.com/spell-correct.html
 def re_split(text): return re.findall('[a-z]+', text.lower())
 
-#http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
-#https://github.com/rrenaud/Gibberish-Detector/blob/master/gib_detect_train.py#L16
 def chunks(l, n):
     for i in range(0, len(l) - n + 1):
         yield l[i:i+n]
 
 def testo_modelet(corpus, model_name="modele_dinamike.pkl"):
-    """Takes in a preferably long string (corpus/training data),
-    split that string into a list, we \"chunkify\" resulting in
-    a list of 2-elem list. Finally we create a dictionary,
-    where each key = first elem and each value = Counter([second elems])
+    """
+    Merr nje string me shume karakter dhe e ndajme ate string ne nje liste, ndajme rezulatet ne nje liste 2 me dy element
+    Ne fund krijojme nje dictionary cdo key eshte elementi pare dhe cdo value nje Counter me elementin e dyte
 
-    Will save/pickle model by default ('modele_dinamike.pkl').
-    Set second argument to false if you wish to not save the models.
+    Keto modele qe krijojme i ruajme ne nje pickle file 'modele_dinamike.pkl'
     """
 
-    # "preperation" step
-    # word is in WORDS
-    global WORDS
-    WORDS = re_split(corpus)
+    global FJALET
+    FJALET = re_split(corpus)
 
-    # first model -> P(word)
-    global WORDS_MODEL
-    WORDS_MODEL = collections.Counter(WORDS)
+    global FJALET_MODELE
+    FJALET_MODELE = collections.Counter(FJALET)
 
-    # another preperation step
-    # wordA, wordB are in WORDS
-    global WORD_TUPLES
-    WORD_TUPLES = list(chunks(WORDS, 2))
+    global FJALET_TUPLE
+    FJALET_TUPLE = list(chunks(FJALET, 2))
 
-    # second model -> P(wordA|wordB)
-    global WORD_TUPLES_MODEL
-    WORD_TUPLES_MODEL = {first:collections.Counter()
-                         for first, second in WORD_TUPLES}
+    global FJALET_MODELE_TUPLES
+    FJALET_MODELE_TUPLES = {first:collections.Counter()
+                         for first, second in FJALET_TUPLE}
 
-    for tup in WORD_TUPLES:
+    for tup in FJALET_TUPLE:
         try:
-            WORD_TUPLES_MODEL[tup[0]].update([tup[1]])
+            FJALET_MODELE_TUPLES[tup[0]].update([tup[1]])
         except:
-            # hack-y fix for uneven # of elements in WORD_TUPLES
             pass
 
     if model_name:
@@ -69,35 +53,34 @@ def testo_modelet(corpus, model_name="modele_dinamike.pkl"):
 
 
 def ruaj_modelet(path=None):
-    """Save models to 'path'. If 'path' not specified,
-    save to module's folder under name 'modele_dinamike.pkl'"""
+    """
+    Ketu bejme ruajtjen e modeleve ne file picke, nese emri i file nuk eshte dhene, perdorim 'modele_dinamike.pkl'
+
+    """
 
     if path == None:
         path = os.path.join(os.path.dirname(__file__), 'modele_dinamike.pkl')
 
     print("saving to:", path)
-    #save for next use. pickle format: (key=model name, value=model)
-    pickle.dump({'words_model': WORDS_MODEL,
-                 'word_tuples_model': WORD_TUPLES_MODEL},
+
+    pickle.dump({'words_model': FJALET_MODELE,
+                 'word_tuples_model': FJALET_MODELE_TUPLES},
                 open(path, 'wb'),
                 protocol=2)
 
 
 
 def krijo_modelet():
-    """unnecessary helper function for training against
-    default corpus data (big.txt)"""
+    """Ne rast se ndodh nje problem me marrjen e te dhenave nga file pickle therrasim kete funksion per te riprovuar te marrim te dhenat"""
 
     bigtxtpath = os.path.join(os.path.dirname(__file__), 'dataSet.txt')
     with open(bigtxtpath, 'rb') as bigtxtfile:
 
         testo_modelet(str(bigtxtfile.read()))
-        #return [WORDS_MODEL, WORD_TUPLES_MODEL]
 
 
 def merr_modelet(load_path=None):
-    """Load autocomplete's built-in model (uses Norvig's big.txt). Optionally
-    provide the path to Python pickle object."""
+    """Marrim modelet qe kemi ruajtur ne file"""
 
     if load_path is None:
         load_path = os.path.join(os.path.dirname(__file__),
@@ -105,14 +88,14 @@ def merr_modelet(load_path=None):
     try:
         models = pickle.load(open(load_path,'rb'))
 
-        global WORDS_MODEL
-        WORDS_MODEL = models['words_model']
+        global FJALET_MODELE
+        FJALET_MODELE = models['words_model']
 
-        global WORD_TUPLES_MODEL
-        WORD_TUPLES_MODEL = models['word_tuples_model']
+        global FJALET_MODELE_TUPLES
+        FJALET_MODELE_TUPLES = models['word_tuples_model']
 
         print("U krijuan modelet")
     except:
        krijo_modelet()
 
-    return [WORDS_MODEL, WORD_TUPLES_MODEL]
+    return [FJALET_MODELE, FJALET_MODELE_TUPLES]
