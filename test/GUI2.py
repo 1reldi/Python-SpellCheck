@@ -20,6 +20,10 @@ from collections import Counter
 
 import time
 
+from bounter import bounter
+
+from smart_open import smart_open
+
 import extremeRead
 
 #the so called "Hidden" step, thus allowing this module to be
@@ -111,7 +115,7 @@ def chunks(l, n):
 
 #This step is where we transform "raw" data
 # into some sort of probabilistic model(s)
-def train_models(corpus, model_name="models_compressed.pkl"):
+def train_models(corpus, model_name, cnt):
     """Takes in a preferably long string (corpus/training data),
     split that string into a list, we \"chunkify\" resulting in
     a list of 2-elem list. Finally we create a dictionary,
@@ -125,20 +129,20 @@ def train_models(corpus, model_name="models_compressed.pkl"):
     # word is in WORDS
     print("start preperation step " + time.asctime())
     global WORDS
-    WORDS = re_split(corpus)
+    WORDS = corpus#re_split(corpus)
     print("end preperation step " + time.asctime())
 
     # first model -> P(word)
     print("start first model -> P(word) " + time.asctime())
     global WORDS_MODEL
-    WORDS_MODEL = collections.Counter(WORDS)
+    WORDS_MODEL = cnt#collections.Counter(WORDS)
     print("end first model -> P(word) " + time.asctime())
 
     # another preperation step
     # wordA, wordB are in WORDS
     print("start wordA, wordB are in WORDS " + time.asctime())
     global WORD_TUPLES
-    WORD_TUPLES = list(chunks(WORDS, 2))
+    WORD_TUPLES = corpus#list(chunks(WORDS, 2))
     print("end wordA, wordB are in WORDS " + time.asctime())
 
     # second model -> P(wordA|wordB)
@@ -161,20 +165,42 @@ def train_models(corpus, model_name="models_compressed.pkl"):
 
 def train_bigtxt():
     """unnecessary helper function for training against
-    default corpus data (big.txt)"""
+##    default corpus data (big.txt)"""
+    print("start reading file " + time.asctime())
+    with smart_open('hope.txt') as wiki:
+        counter = bounter(size_mb=1024)
+        for line in wiki:
+            words = line.decode("utf-8", "ignore").split()
+            bigrams = zip(words, words[1:])
+            try:
+                counter.update(' '.join(pair) for pair in bigrams)
+            except:
+                print "0"
+    print("end reading file " + time.asctime())
+    text = list(counter.iteritems())
+    word_tuples = map(lambda i: i[0].split(), text)
+    train_models(word_tuples, "models_compressed.pkl", '')
+    #print(counter['une jam'])
 ##
-##    bigtxtpath = os.path.join(os.path.dirname(__file__), 'corpus1.txt') #big hope
+
+##    bigtxtpath = os.path.join(os.path.dirname(__file__), 'hope.txt') #big hope
 ##    with open(bigtxtpath, 'rb') as bigtxtfile:
 ##
+
 ##        train_models(str(bigtxtfile.read()))
-    with extremeRead.File('corpus1.txt') as f:
-        text = ""
-        print("start reading file " + time.asctime())
-        for row in f.backward():
-            #text.append(row.lower())
-            text += row
-        print("end reading file " + time.asctime())
-        train_models(text)
+##    with extremeRead.File('hope.txt') as f:
+##        text = []
+##        cnt = collections.Counter()
+##        print("start reading file " + time.asctime())
+##        for row in f.backward():
+##            tmp = re_split(row)
+##            for i in tmp:
+##                cnt[i] += 1
+##            text.append(row.lower())
+##            text += tmp
+##        print("end reading file " + time.asctime())
+##        #print len(text)
+##        train_models(text, "models_compressed.pkl", cnt)
 
 def save_models(path=None):
     """Save models to 'path'. If 'path' not specified,
@@ -312,6 +338,7 @@ class Application(Frame):
         results = []
         for letter in alphabet:
             results = results + this_word_given_last(name, letter)
+        print results
 
         results = sorted(results, key=lambda res: res[1])[::-1]
         results = filter(lambda x: not (x[0] in alphabet), results)
